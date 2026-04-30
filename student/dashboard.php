@@ -15,6 +15,7 @@ $stmt = $conn->prepare("
 $stmt->execute([':x' => $user_id]);
 $user = $stmt->fetch();
 
+// Programme (courses via enrollments -> students)
 $stmt = $conn->prepare("
     SELECT courses.title, users.firstname AS prof_name
     FROM enrollments
@@ -27,8 +28,7 @@ $stmt = $conn->prepare("
 $stmt->execute([$user_id]);
 $courses = $stmt->fetchAll();
 
-
-
+// Camarades (same class, role = student)
 $stmt = $conn->prepare("
     SELECT users.firstname, users.lastname
     FROM users
@@ -42,6 +42,17 @@ $stmt = $conn->prepare("
 $stmt->execute([$user_id, $user_id]);
 $classmates = $stmt->fetchAll();
 
+// Modules
+$stmt = $conn->prepare("
+    SELECT courses.title, courses.description, courses.total_hours
+    FROM courses
+    INNER JOIN enrollments ON enrollments.course_id = courses.id
+    WHERE enrollments.student_id = (
+        SELECT id FROM students WHERE user_id = ?
+    )
+");
+$stmt->execute([$user_id]);
+$modules = $stmt->fetchAll();
 ?>
 
 <!DOCTYPE html>
@@ -55,7 +66,7 @@ $classmates = $stmt->fetchAll();
 <body class="bg-gray-100">
 <div class="flex">
 
-  
+  <!-- SIDEBAR -->
   <aside class="w-64 bg-blue-700 text-white min-h-screen p-5 fixed">
     <h2 class="text-xl font-bold mb-6">Student Dashboard</h2>
     <nav class="space-y-3 text-sm">
@@ -113,12 +124,11 @@ $classmates = $stmt->fetchAll();
           </tr>
           <?php endforeach; ?>
         </tbody>
-
-
       </table>
     </section>
 
-      <section id="classmates" class="bg-white p-5 rounded-lg shadow">
+    <!-- CAMARADES -->
+    <section id="classmates" class="bg-white p-5 rounded-lg shadow">
       <h2 class="font-bold mb-4">Ma Classe</h2>
       <ul class="text-sm space-y-2">
         <?php foreach ($classmates as $mate): ?>
@@ -129,3 +139,46 @@ $classmates = $stmt->fetchAll();
         <?php endforeach; ?>
       </ul>
     </section>
+
+    <!-- MODULES -->
+    <section id="modules" class="bg-white p-5 rounded-lg shadow">
+      <h2 class="font-bold mb-4">Modules</h2>
+      <div class="space-y-4 text-sm">
+        <?php foreach ($modules as $module): ?>
+        <div class="border p-3 rounded">
+          <h3 class="font-semibold"><?= htmlspecialchars($module['title']) ?></h3>
+          <p>Description : <?= htmlspecialchars($module['description']) ?></p>
+          <p>Volume horaire : <?= htmlspecialchars($module['total_hours']) ?>h</p>
+        </div>
+        <?php endforeach; ?>
+      </div>
+    </section>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    
+
+  </main>
+</div>
+
+
+
+
+
+
+
+
+</body>
+</html>
