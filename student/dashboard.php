@@ -27,6 +27,21 @@ $stmt = $conn->prepare("
 $stmt->execute([$user_id]);
 $courses = $stmt->fetchAll();
 
+
+
+$stmt = $conn->prepare("
+    SELECT users.firstname, users.lastname
+    FROM users
+    INNER JOIN students ON students.user_id = users.id
+    WHERE students.class_id = (
+        SELECT class_id FROM students WHERE user_id = ?
+    )
+    AND users.role_id = 3
+    AND users.id != ?
+");
+$stmt->execute([$user_id, $user_id]);
+$classmates = $stmt->fetchAll();
+
 ?>
 
 <!DOCTYPE html>
@@ -98,5 +113,19 @@ $courses = $stmt->fetchAll();
           </tr>
           <?php endforeach; ?>
         </tbody>
+
+
       </table>
+    </section>
+
+      <section id="classmates" class="bg-white p-5 rounded-lg shadow">
+      <h2 class="font-bold mb-4">Ma Classe</h2>
+      <ul class="text-sm space-y-2">
+        <?php foreach ($classmates as $mate): ?>
+        <li class="flex justify-between border-b pb-2">
+          <span><?= htmlspecialchars($mate['firstname'] . ' ' . $mate['lastname']) ?></span>
+          <span class="text-gray-500"><?= htmlspecialchars($user['classe']) ?></span>
+        </li>
+        <?php endforeach; ?>
+      </ul>
     </section>
