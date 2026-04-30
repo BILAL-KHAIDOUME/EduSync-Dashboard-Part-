@@ -13,6 +13,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_user'])) {
     $password  = $_POST['password']  ?? null;
     $roles_id  = $_POST['roles_id']  ?? null;
 
+    
     // Check if email already exists
     $check = $conn->prepare("SELECT id FROM users WHERE email = ?");
     $check->execute([$email]);
