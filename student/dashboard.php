@@ -15,6 +15,18 @@ $stmt = $conn->prepare("
 $stmt->execute([':x' => $user_id]);
 $user = $stmt->fetch();
 
+$stmt = $conn->prepare("
+    SELECT courses.title, users.firstname AS prof_name
+    FROM enrollments
+    INNER JOIN courses ON enrollments.course_id = courses.id
+    INNER JOIN users ON courses.professor_id = users.id
+    WHERE enrollments.student_id = (
+        SELECT id FROM students WHERE user_id = ?
+    )
+");
+$stmt->execute([$user_id]);
+$courses = $stmt->fetchAll();
+
 ?>
 
 <!DOCTYPE html>
@@ -66,4 +78,25 @@ $user = $stmt->fetch();
           <p><strong>Statut :</strong> Étudiant</p>
         </div>
       </div>
+    </section>
+
+    <!-- COURS -->
+    <section id="courses" class="bg-white p-5 rounded-lg shadow">
+      <h2 class="font-bold mb-4">Mon Programme</h2>
+      <table class="w-full text-sm">
+        <thead class="bg-gray-100">
+          <tr>
+            <th class="p-2 text-left">Cours</th>
+            <th class="p-2 text-left">Professeur</th>
+          </tr>
+        </thead>
+        <tbody>
+          <?php foreach ($courses as $course): ?>
+          <tr class="border-t">
+            <td class="p-2"><?= htmlspecialchars($course['title']) ?></td>
+            <td class="p-2"><?= htmlspecialchars($course['prof_name']) ?></td>
+          </tr>
+          <?php endforeach; ?>
+        </tbody>
+      </table>
     </section>
